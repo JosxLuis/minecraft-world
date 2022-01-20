@@ -8,13 +8,25 @@ import Stats from "three/examples/jsm/libs/stats.module";
 function minecraft_world() {
   const scene = new THREE.Scene()
   scene.add(new THREE.AxesHelper(5))
-  scene.background = new THREE.Color("#212121")
+  scene.background = new THREE.Color()
+
+  // Day and night
+  var clock = new THREE.Clock();
+
+  const colors = [
+    new THREE.Color("#88CEEB"),
+    new THREE.Color("#88CEEB"),
+    new THREE.Color("#000000"),
+    new THREE.Color("#000000"),
+  ];
+
+  const duration = 20; // 4s
 
 
   // const light = new THREE.SpotLight();
   // light.position.set(100, 100, 100)
-  const light = new THREE.AmbientLight( 0x404040 ); // soft white light
-  scene.add(light);
+  const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+  scene.add( light );// soft white light
 
   const camera = new THREE.PerspectiveCamera(
     75,
@@ -51,12 +63,19 @@ function minecraft_world() {
 
   const controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
+  controls.zoomSpeed = 1.5;
+
 
   const loader = new GLTFLoader()
   loader.load(
     '../models/blender-model/untitled.glb',
     function (gltf) {
-      gltf.scene.traverse(function (child) {
+
+      var model = gltf.scene;
+      var animations = gltf.animations;
+      const mixer = new THREE.AnimationMixer(model);
+
+      model.traverse(function (child) {
         if ( child.isMesh ) {
           // child.castShadow = true;
           // child.receiveShadow = true;
@@ -70,7 +89,12 @@ function minecraft_world() {
         //   l.shadow.mapSize.height = 2048
         // }
       })
-      scene.add(gltf.scene)
+
+      scene.add(model)
+
+      animations.forEach(function(clip) {
+	      mixer.clipAction(clip).play();
+      });
     },
     (xhr) => {
       console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
@@ -91,11 +115,28 @@ function minecraft_world() {
   const stats = Stats()
   document.body.appendChild(stats.dom)
 
+
+  function animateBackground(t) {
+    const f = Math.floor(duration / colors.length);
+    const i1 = Math.floor((t / f) % colors.length);
+    let i2 = i1 + 1;
+
+    if (i2 === colors.length) i2 = 0;
+    const color1 = colors[i1];
+    const color2 = colors[i2];
+    const a = (t / f) % colors.length % 1;
+
+    scene.background.copy(color1);
+    scene.background.lerp(color2, a);
+  }
+
   function animate() {
     requestAnimationFrame(animate)
     controls.update()
     render()
     stats.update()
+    const time = clock.getElapsedTime();
+    animateBackground(time)
   }
 
   function render() {
