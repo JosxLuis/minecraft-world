@@ -5,77 +5,110 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import Stats from "three/examples/jsm/libs/stats.module";
 
 
-function minecraft_world() {
-  const scene = new THREE.Scene()
-  scene.add(new THREE.AxesHelper(5))
-  scene.background = new THREE.Color()
-
-  // Day and night
-  var clock = new THREE.Clock();
-
-  const colors = [
-    new THREE.Color("#88CEEB"),
-    new THREE.Color("#88CEEB"),
-    new THREE.Color("#000000"),
-    new THREE.Color("#000000"),
-  ];
-
-  const duration = 20; // 4s
+//-----------------------------------------------------------
+//-- Create scene's base
+//-----------------------------------------------------------
+function create_scene(): THREE {
+    const scene = new THREE.Scene();
+    scene.add(new THREE.AxesHelper(5));
+    scene.background = new THREE.Color();
+    return scene
+}
 
 
-  // const light = new THREE.SpotLight();
-  // light.position.set(100, 100, 100)
-  const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-  scene.add( light );// soft white light
-
+//-----------------------------------------------------------
+//-- Create camera
+//-----------------------------------------------------------
+function create_camera(): THREE {
   const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
-  )
+  );
+  camera.position.set(0, 40, 10);
+  return camera
+}
 
-  // Sound
-  // create an AudioListener and add it to the camera
+
+//-----------------------------------------------------------
+//-- Create renderer
+//-----------------------------------------------------------
+function create_renderer(): THREE {
+  const renderer = new THREE.WebGLRenderer({antialias: false});
+  // renderer.physicallyCorrectLights = true
+  // renderer.shadowMap.enabled = true
+  // renderer.outputEncoding = THREE.sRGBEncoding
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+  return renderer
+}
+
+
+//-----------------------------------------------------------
+//-- Create controls
+//-----------------------------------------------------------
+function create_controls(camera: THREE, renderer: THREE): THREE {
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.zoomSpeed = 1.5;
+  return controls
+}
+
+
+//-----------------------------------------------------------
+//-- Create stats
+//-----------------------------------------------------------
+function create_stats(): THREE {
+  const stats = Stats();
+  document.body.appendChild(stats.dom);
+  return stats
+}
+
+
+//-----------------------------------------------------------
+//-- Add light to scene
+//-----------------------------------------------------------
+function load_light(scene: THREE): THREE {
+  const light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+  scene.add(light);
+  return scene
+}
+
+
+//-----------------------------------------------------------
+//-- Loads minecraft world audio
+//-----------------------------------------------------------
+function load_audio(camera: THREE): THREE {
   const listener = new THREE.AudioListener();
-  camera.add( listener );
+  camera.add(listener);
 
-  // create a global audio source
   const sound = new THREE.Audio( listener );
-
-  // load a sound and set it as the Audio object's buffer
   const audioLoader = new THREE.AudioLoader();
-  audioLoader.load( '../music/minecraft-music.ogg', function( buffer ) {
-    sound.setBuffer( buffer );
+  audioLoader.load( '../music/minecraft-music.ogg', function(buffer: THREE) {
+    sound.setBuffer(buffer);
     sound.setLoop( true );
     sound.setVolume( 0.5 );
     sound.play();
   });
-
-  camera.position.set(0, 40, 10);
-
-  const renderer = new THREE.WebGLRenderer({antialias: false})
-  // renderer.physicallyCorrectLights = true
-  // renderer.shadowMap.enabled = true
-  // renderer.outputEncoding = THREE.sRGBEncoding
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  document.body.appendChild(renderer.domElement)
-
-  const controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true
-  controls.zoomSpeed = 1.5;
+  return camera
+}
 
 
-  const loader = new GLTFLoader()
+//-----------------------------------------------------------
+//-- Loads blender model
+//-----------------------------------------------------------
+function load_blender(scene: THREE, path: string): THREE {
+  const loader = new GLTFLoader();
   loader.load(
-    '../models/blender-model/untitled.glb',
+    path,
     function (gltf) {
 
       var model = gltf.scene;
       var animations = gltf.animations;
       const mixer = new THREE.AnimationMixer(model);
 
-      model.traverse(function (child) {
+      model.traverse(function (child: THREE) {
         if ( child.isMesh ) {
           // child.castShadow = true;
           // child.receiveShadow = true;
@@ -92,60 +125,108 @@ function minecraft_world() {
 
       scene.add(model)
 
-      animations.forEach(function(clip) {
+      animations.forEach(function(clip: THREE) {
 	      mixer.clipAction(clip).play();
       });
     },
-    (xhr) => {
+    (xhr: THREE) => {
       console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
     },
-    (error) => {
+    (error: string) => {
       console.log(error)
     }
-  )
-
-  window.addEventListener('resize', onWindowResize, false)
-  function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight
-    camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    render()
-  }
-
-  const stats = Stats()
-  document.body.appendChild(stats.dom)
+  );
+  return scene
+}
 
 
-  function animateBackground(t) {
+//-----------------------------------------------------------
+//-- Creates scene's day system
+//-----------------------------------------------------------
+function day_system(scene: THREE, duration: number, time: number, colors: THREE[]): THREE {
     const f = Math.floor(duration / colors.length);
-    const i1 = Math.floor((t / f) % colors.length);
+    const i1 = Math.floor((time / f) % colors.length);
     let i2 = i1 + 1;
 
     if (i2 === colors.length) i2 = 0;
     const color1 = colors[i1];
     const color2 = colors[i2];
-    const a = (t / f) % colors.length % 1;
+    const a = (time / f) % colors.length % 1;
 
     scene.background.copy(color1);
     scene.background.lerp(color2, a);
-  }
+    return scene
+}
 
-  function animate() {
-    requestAnimationFrame(animate)
-    controls.update()
-    render()
-    stats.update()
-    const time = clock.getElapsedTime();
-    animateBackground(time)
-  }
 
-  function render() {
+//-----------------------------------------------------------
+//-- Initialize minecraft world!
+//-----------------------------------------------------------
+function minecraft_world() {
+
+  // Create scene and load light
+  var scene = create_scene();
+  scene = load_light(scene);
+  scene = load_blender(scene,"../models/blender-model/minecraft-world.glb");
+
+
+  // Create camera and load audio
+  var camera = create_camera();
+  camera = load_audio(camera);
+
+
+  // Create stats
+  var stats = create_stats();
+
+
+  // Create renderer
+  var renderer = create_renderer();
+
+
+  // Create controls
+  var controls = create_controls(camera, renderer);
+
+
+  // Define variables for day system function
+  var clock = new THREE.Clock();
+  const duration = 20;
+  const colors = [
+    new THREE.Color("#88CEEB"),
+    new THREE.Color("#88CEEB"),
+    new THREE.Color("#000000"),
+    new THREE.Color("#000000"),
+  ];
+
+
+  // Resize scene depending on the size of the window
+  window.addEventListener('resize', onWindowResize, false)
+  function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.render(scene, camera)
   }
 
+
+  // Render scene, animations, controls stats and day's system
+  function animate() {
+    requestAnimationFrame(animate)
+    controls.update()
+    renderer.render(scene, camera)
+    stats.update()
+    const time = clock.getElapsedTime();
+    scene = day_system(scene, duration, time, colors)
+  }
+
+
+  // Call animate to render minecraft world
   animate()
 }
 
+
+//-----------------------------------------------------------
+//-- Initialize scene in Three.js
+//-----------------------------------------------------------
 ReactDOM.render(
   minecraft_world(),
   document.getElementById('root')
