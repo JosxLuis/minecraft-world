@@ -100,13 +100,15 @@ function load_audio(camera: THREE): THREE {
 //-----------------------------------------------------------
 function load_blender(scene: THREE, path: string): THREE {
   const loader = new GLTFLoader();
+  var mixer;
+
   loader.load(
     path,
     function (gltf) {
 
       var model = gltf.scene;
       var animations = gltf.animations;
-      const mixer = new THREE.AnimationMixer(model);
+      mixer = new THREE.AnimationMixer(model);
 
       model.traverse(function (child: THREE) {
         if ( child.isMesh ) {
@@ -123,11 +125,14 @@ function load_blender(scene: THREE, path: string): THREE {
         // }
       })
 
-      scene.add(model)
+      console.log( gltf.animations );
+
 
       animations.forEach(function(clip: THREE) {
 	      mixer.clipAction(clip).play();
       });
+
+      scene.add(model)
     },
     (xhr: THREE) => {
       console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
@@ -136,7 +141,7 @@ function load_blender(scene: THREE, path: string): THREE {
       console.log(error)
     }
   );
-  return scene
+  return [scene, mixer]
 }
 
 
@@ -167,7 +172,9 @@ function minecraft_world() {
   // Create scene and load light
   var scene = create_scene();
   scene = load_light(scene);
-  scene = load_blender(scene,"../models/blender-model/minecraft-world.glb");
+  var init = load_blender(scene, "../models/blender-model/minecraft-world.glb");
+  scene = init[0]
+  var mixer = init[1]
 
 
   // Create camera and load audio
@@ -212,6 +219,7 @@ function minecraft_world() {
   function animate() {
     requestAnimationFrame(animate)
     controls.update()
+    if (mixer) mixer.update(clock.getDelta());
     renderer.render(scene, camera)
     stats.update()
     const time = clock.getElapsedTime();
