@@ -69,17 +69,16 @@ function create_stats(): THREE {
 //-----------------------------------------------------------
 //-- Add light to scene
 //-----------------------------------------------------------
-function load_light(scene: THREE): THREE {
+function load_light(scene: THREE): void {
   const light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
   scene.add(light);
-  return scene
 }
 
 
 //-----------------------------------------------------------
 //-- Loads minecraft world audio
 //-----------------------------------------------------------
-function load_audio(camera: THREE): THREE {
+function load_audio(camera: THREE): void {
   const listener = new THREE.AudioListener();
   camera.add(listener);
 
@@ -91,16 +90,16 @@ function load_audio(camera: THREE): THREE {
     sound.setVolume( 0.5 );
     sound.play();
   });
-  return camera
 }
 
 
 //-----------------------------------------------------------
 //-- Loads blender model
 //-----------------------------------------------------------
-function load_blender(scene: THREE, path: string): THREE {
+var mixer: THREE;
+
+function load_blender(scene: THREE, path: string): void {
   const loader = new GLTFLoader();
-  var mixer;
 
   loader.load(
     path,
@@ -109,24 +108,6 @@ function load_blender(scene: THREE, path: string): THREE {
       var model = gltf.scene;
       var animations = gltf.animations;
       mixer = new THREE.AnimationMixer(model);
-
-      model.traverse(function (child: THREE) {
-        if ( child.isMesh ) {
-          // child.castShadow = true;
-          // child.receiveShadow = true;
-          // child.geometry.computeVertexNormals();
-        }
-        // if ((child as THREE.Light).isLight) {
-        //   const l = child as THREE.Light
-        //   l.castShadow = true
-        //   l.shadow.bias = -0.003
-        //   l.shadow.mapSize.width = 2048
-        //   l.shadow.mapSize.height = 2048
-        // }
-      })
-
-      console.log( gltf.animations );
-
 
       animations.forEach(function(clip: THREE) {
 	      mixer.clipAction(clip).play();
@@ -141,14 +122,13 @@ function load_blender(scene: THREE, path: string): THREE {
       console.log(error)
     }
   );
-  return [scene, mixer]
 }
 
 
 //-----------------------------------------------------------
 //-- Creates scene's day system
 //-----------------------------------------------------------
-function day_system(scene: THREE, duration: number, time: number, colors: THREE[]): THREE {
+function day_system(scene: THREE, duration: number, time: number, colors: THREE[]): void {
     const f = Math.floor(duration / colors.length);
     const i1 = Math.floor((time / f) % colors.length);
     let i2 = i1 + 1;
@@ -160,7 +140,6 @@ function day_system(scene: THREE, duration: number, time: number, colors: THREE[
 
     scene.background.copy(color1);
     scene.background.lerp(color2, a);
-    return scene
 }
 
 
@@ -171,15 +150,13 @@ function minecraft_world() {
 
   // Create scene and load light
   var scene = create_scene();
-  scene = load_light(scene);
-  var init = load_blender(scene, "../models/blender-model/minecraft-world.glb");
-  scene = init[0]
-  var mixer = init[1]
+  load_light(scene);
+  load_blender(scene, "../models/blender-model/minecraft-world.glb");
 
 
   // Create camera and load audio
   var camera = create_camera();
-  camera = load_audio(camera);
+  load_audio(camera);
 
 
   // Create stats
@@ -222,8 +199,7 @@ function minecraft_world() {
     if (mixer) mixer.update(clock.getDelta());
     renderer.render(scene, camera)
     stats.update()
-    const time = clock.getElapsedTime();
-    scene = day_system(scene, duration, time, colors)
+    day_system(scene, duration, clock.getElapsedTime(), colors)
   }
 
 
