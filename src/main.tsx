@@ -173,14 +173,19 @@ function minecraft_world() {
 
   // Define variables for day system function
   var clock = new THREE.Clock();
-  const duration = 20;
+  const duration = 46;
   const colors = [
     new THREE.Color("#88CEEB"),
     new THREE.Color("#88CEEB"),
+    new THREE.Color("#88CEEB"),
+    new THREE.Color("#88CEEB"),
+    new THREE.Color("#88CEEB"),
     new THREE.Color("#000000"),
     new THREE.Color("#000000"),
+    new THREE.Color("#000000"),
+    new THREE.Color("#000000"),
+    new THREE.Color("#000000")
   ];
-
 
   // Resize scene depending on the size of the window
   window.addEventListener('resize', onWindowResize, false)
