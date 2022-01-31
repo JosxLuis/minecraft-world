@@ -83,7 +83,7 @@ function load_audio(camera: THREE.PerspectiveCamera): void {
 
   const sound = new THREE.Audio( listener );
   const audioLoader = new THREE.AudioLoader();
-  audioLoader.load( '../music/minecraft-music.ogg', function(buffer) {
+  audioLoader.load(window.location.origin + '/music/minecraft-music.ogg', function(buffer) {
     sound.setBuffer(buffer);
     sound.setLoop( true );
     sound.setVolume( 0.5 );
@@ -154,7 +154,7 @@ function minecraft_world() {
   // Create scene and load light
   var scene = create_scene();
   load_light(scene);
-  load_blender(scene, "../models/blender-model/minecraft-world.glb");
+  load_blender(scene, window.location.origin + "/models/blender-model/minecraft-world.glb");
 
 
   // Create camera and load audio
