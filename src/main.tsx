@@ -1,4 +1,3 @@
-import ReactDOM from 'react-dom'
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
@@ -8,7 +7,7 @@ import Stats from "three/examples/jsm/libs/stats.module";
 //-----------------------------------------------------------
 //-- Create scene's base
 //-----------------------------------------------------------
-function create_scene(): THREE {
+function create_scene() {
     const scene = new THREE.Scene();
     scene.add(new THREE.AxesHelper(5));
     scene.background = new THREE.Color();
@@ -19,14 +18,14 @@ function create_scene(): THREE {
 //-----------------------------------------------------------
 //-- Create camera
 //-----------------------------------------------------------
-function create_camera(): THREE {
+function create_camera() {
   const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
-  camera.position.set(0, 40, 10);
+  camera.position.set(-34.907, -49.676, 22.583);
   return camera
 }
 
@@ -34,7 +33,7 @@ function create_camera(): THREE {
 //-----------------------------------------------------------
 //-- Create renderer
 //-----------------------------------------------------------
-function create_renderer(): THREE {
+function create_renderer() {
   const renderer = new THREE.WebGLRenderer({antialias: false});
   // renderer.physicallyCorrectLights = true
   // renderer.shadowMap.enabled = true
@@ -48,7 +47,7 @@ function create_renderer(): THREE {
 //-----------------------------------------------------------
 //-- Create controls
 //-----------------------------------------------------------
-function create_controls(camera: THREE, renderer: THREE): THREE {
+function create_controls(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.zoomSpeed = 1.5;
@@ -59,7 +58,7 @@ function create_controls(camera: THREE, renderer: THREE): THREE {
 //-----------------------------------------------------------
 //-- Create stats
 //-----------------------------------------------------------
-function create_stats(): THREE {
+function create_stats() {
   const stats = Stats();
   document.body.appendChild(stats.dom);
   return stats
@@ -69,7 +68,7 @@ function create_stats(): THREE {
 //-----------------------------------------------------------
 //-- Add light to scene
 //-----------------------------------------------------------
-function load_light(scene: THREE): void {
+function load_light(scene: THREE.Scene): void {
   const light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
   scene.add(light);
 }
@@ -78,13 +77,13 @@ function load_light(scene: THREE): void {
 //-----------------------------------------------------------
 //-- Loads minecraft world audio
 //-----------------------------------------------------------
-function load_audio(camera: THREE): void {
+function load_audio(camera: THREE.PerspectiveCamera): void {
   const listener = new THREE.AudioListener();
   camera.add(listener);
 
   const sound = new THREE.Audio( listener );
   const audioLoader = new THREE.AudioLoader();
-  audioLoader.load( '../music/minecraft-music.ogg', function(buffer: THREE) {
+  audioLoader.load( '../music/minecraft-music.ogg', function(buffer) {
     sound.setBuffer(buffer);
     sound.setLoop( true );
     sound.setVolume( 0.5 );
@@ -96,9 +95,9 @@ function load_audio(camera: THREE): void {
 //-----------------------------------------------------------
 //-- Loads blender model
 //-----------------------------------------------------------
-var mixer: THREE;
+var mixer: THREE.AnimationMixer;
 
-function load_blender(scene: THREE, path: string): void {
+function load_blender(scene: THREE.Scene, path: string): void {
   const loader = new GLTFLoader();
 
   loader.load(
@@ -109,16 +108,16 @@ function load_blender(scene: THREE, path: string): void {
       var animations = gltf.animations;
       mixer = new THREE.AnimationMixer(model);
 
-      animations.forEach(function(clip: THREE) {
+      animations.forEach(function(clip) {
 	      mixer.clipAction(clip).play();
       });
 
       scene.add(model)
     },
-    (xhr: THREE) => {
+    (xhr) => {
       console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
     },
-    (error: string) => {
+    (error) => {
       console.log(error)
     }
   );
@@ -128,7 +127,7 @@ function load_blender(scene: THREE, path: string): void {
 //-----------------------------------------------------------
 //-- Creates scene's day system
 //-----------------------------------------------------------
-function day_system(scene: THREE, duration: number, time: number, colors: THREE[]): void {
+function day_system(scene: THREE.Scene, duration: number, time: number, colors: THREE.Color[]): void {
     const f = Math.floor(duration / colors.length);
     const i1 = Math.floor((time / f) % colors.length);
     let i2 = i1 + 1;
@@ -138,8 +137,12 @@ function day_system(scene: THREE, duration: number, time: number, colors: THREE[
     const color2 = colors[i2];
     const a = (time / f) % colors.length % 1;
 
-    scene.background.copy(color1);
-    scene.background.lerp(color2, a);
+    if (scene?.background) {
+      // @ts-ignore
+      scene.background.copy(color1);
+      // @ts-ignore
+      scene.background.lerp(color2, a);
+    }
 }
 
 
@@ -174,7 +177,7 @@ function minecraft_world() {
   // Define variables for day system function
   var clock = new THREE.Clock();
   const duration = 46;
-  const colors = [
+  const colors: THREE.Color[] = [
     new THREE.Color("#88CEEB"),
     new THREE.Color("#88CEEB"),
     new THREE.Color("#88CEEB"),
@@ -216,7 +219,4 @@ function minecraft_world() {
 //-----------------------------------------------------------
 //-- Initialize scene in Three.js
 //-----------------------------------------------------------
-ReactDOM.render(
-  minecraft_world(),
-  document.getElementById('root')
-)
+minecraft_world()
