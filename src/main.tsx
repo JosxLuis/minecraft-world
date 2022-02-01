@@ -219,4 +219,7 @@ function minecraft_world() {
 //-----------------------------------------------------------
 //-- Initialize scene in Three.js
 //-----------------------------------------------------------
-minecraft_world()
+var startButton = document.getElementById( 'startButton' );
+startButton?.addEventListener( 'click', function () {
+  minecraft_world()
+}, false );
