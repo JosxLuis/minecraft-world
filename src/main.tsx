@@ -25,7 +25,7 @@ function create_camera() {
     0.1,
     1000
   );
-  camera.position.set(-34.907, -49.676, 22.583);
+  camera.position.set(-34.907, 25.676, 22.583);
   return camera
 }
 
@@ -221,5 +221,7 @@ function minecraft_world() {
 //-----------------------------------------------------------
 var startButton = document.getElementById( 'startButton' );
 startButton?.addEventListener( 'click', function () {
+  const overlay = document.getElementById( 'overlay' );
+	overlay?.remove();
   minecraft_world()
-}, false );
+});

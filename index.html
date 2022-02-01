@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/src/minecraft.ico" />
+    <link rel="stylesheet" href="index.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Minecraft World</title>
     <style>
@@ -11,7 +12,9 @@
   </head>
   <body>
     <div id="root"></div>
-    <button id="startButton">Start</button>
+    <div id="overlay">
+      <img src="images/button.png" id="startButton" />
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
