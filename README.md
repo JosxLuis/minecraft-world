@@ -10,6 +10,28 @@ As you can see the world is a sphere, which in the same way is planned to be imp
 
 ---
 
-Reference Link:
-https://news.microsoft.com/stories/block-by-block/
+## Development
 
+<img src="screenshots/menu.png"
+     alt="minecraft-world"
+     style="width: 100%;"
+/>
+
+
+<img src="screenshots/implementation.png"
+     alt="minecraft-world"
+     style="width: 100%;"
+/>
+
+## Resources
+During the development of the project we created our minecraft world model by playing minecraft (literally), afterwards we imported the map into blender to start working with textures, lights and animations. Finally we used Three.js and TypeScript to pass our blender model to a webpage, where everyone who access to it can see our final work.
+
+The characters and mobs models were taken from
+[Nils Söderman](https://nilssoderman.com/downloads/minecraft-blender-rig/) webpage, where he allows people to download his awesome works.
+
+## Contributors
+- Rey Vega - [@ReyVega](https://github.com/ReyVega)
+- José Luis Águilar - [@JosxLuis](https://github.com/josxluis)
+
+## Inspiration
+[Minecraft World - Microsoft](https://news.microsoft.com/stories/block-by-block/)
